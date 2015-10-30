@@ -51,23 +51,25 @@ class DecaWaveDriver:
       d2 = 0
       d3 = 0
       while not rospy.is_shutdown():
-        i = 0
-        while i < 3:
-          raw_data = ser.read(size = 56)
-          if raw_data[1:4] == b'a00':
-            d0 = int(raw_data[9:17], 16) / 1000.00
-          elif raw_data[1:4] == b'a01':
-            d1 = int(raw_data[9:17], 16) / 1000.00
-          elif raw_data[1:4] == b'a02':
-            d2 = int(raw_data[9:17], 16) / 1000.00
-          elif raw_data[1:4] == b'a03':
-            d3 = int(raw_data[9:17], 16) / 1000.00
-          i+=1
-          
-        dwMsg.dist = (d0, d1, d2, d3)
-        dwMsg.header.stamp = rospy.get_rostime()
-        dwPub.publish(dwMsg)
-      
+        if ser.read(size = 1) == b'm':
+          if ser.read(size = 3) == b'a00':
+            raw_data = ser.read(size = 52)
+            d0 = int(raw_data[5:13], 16)/ 1000.00
+            i = 0
+            while i < 3:
+              raw_data = ser.read(size = 56)
+              if raw_data[1:4] == b'a01':
+                d1 = int(raw_data[9:17], 16) / 1000.00
+              elif raw_data[1:4] == b'a02':
+                d2 = int(raw_data[9:17], 16) / 1000.00
+              elif raw_data[1:4] == b'a03':
+                d3 = int(raw_data[9:17], 16) / 1000.00
+              i+=1
+              
+            dwMsg.dist = (d0, d1, d2, d3)
+            dwMsg.header.stamp = rospy.get_rostime()
+            dwPub.publish(dwMsg)
+        
       ser.close()
       
     except SerialException:
